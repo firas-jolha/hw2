@@ -1,7 +1,8 @@
 # HW2
 Advanced Machine Learning Course - Homework 2
 
-[![Docker Image Test](https://github.com/firas-jolha/hw2/blob/main/.github/workflows/docker-image.yml/badge.svg)](https://github.com/firas-jolha/hw2/blob/main/.github/workflows/docker-image.yml)
+![Docker Image Test](https://github.com/firas-jolha/hw2//actions/workflows/docker-image.yml/badge.svg)
+
 ---
 # Installation
 
