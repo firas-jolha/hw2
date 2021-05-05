@@ -10,13 +10,11 @@ You have two options to run this program.
 
 To run this program in a docker container, run the following commands:
 
-### Build the Image
 1. Build the image
 ```bash
 docker build -t hw2 .
 ```
 
-### Run the Container
 2. Run the container 
 ```bash
 docker run hw2
@@ -26,13 +24,11 @@ docker run hw2
 
 To run this program locally, you need to do as follows:
 
-### Installation
 1. Install the requirements
 ```bash
 pip3 install -r requirements.txt
 ```
 
-### Running
 2. Execute scripts
 ---
 - For training the model
