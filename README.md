@@ -30,7 +30,6 @@ pip3 install -r requirements.txt
 ```
 
 2. Execute scripts
----
 - For training the model
 ```bash
 python3 ./src/train.py
