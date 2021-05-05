@@ -15,9 +15,9 @@ COPY src/ .
 
 RUN echo "Training Stage"
 
-CMD ['python', './train.py']
+CMD ["python", "./train.py"]
 
 
 RUN echo "Testing Stage"
 
-CMD ['python', './test.py']
+CMD ["python", "./test.py"]
