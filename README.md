@@ -48,7 +48,7 @@ pip3 install -r requirements.txt
 ```bash
 python3 ./src/train.py
 ```
-- For testing the models run
+- For testing the model
 ```bash
 python3 ./src/test.py
 ```
