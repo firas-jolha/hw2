@@ -4,6 +4,16 @@ Advanced Machine Learning Course - Homework 2
 ![Docker Image Test](https://github.com/firas-jolha/hw2//actions/workflows/docker-image.yml/badge.svg)
 
 ---
+# Description
+This program is an implementation collaborative filtering technique in recommender systems. The idea is to build a full ratings matrix for users and movies. This repo includes implementations of two methods for imputing the lost ratings of users to movies.
+
+1. Alternating Least Squares
+ 
+ This method tries to compute the ratings by training a ratings matrix for some iterations by minimizing the objective function.
+
+3. Neural Collaborative Filtering
+This method uses an artificial neural network to learn the latent space of the ratings then predicting them.
+
 # Installation
 
 You have two options to run this program.
