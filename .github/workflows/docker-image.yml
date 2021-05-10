@@ -15,5 +15,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag hw2:$(date +%s)
-      run: docker run hw2
+    run: docker build -t hw2
+    
+  runit:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run the Docker image
+    run: docker run hw2
+    
+#       run: docker build . --file Dockerfile --tag hw2:$(date +%s)
+#       run: docker run hw2
