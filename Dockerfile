@@ -10,6 +10,8 @@ COPY requirements.txt .
 #Install the dependencies
 RUN pip install -r requirements.txt
 
+RUN ls
+
 #Copy the script folder to the working directory 
 COPY src/ .
 
