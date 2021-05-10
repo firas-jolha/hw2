@@ -7,15 +7,28 @@ import numpy as np
 
 
 def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
-  '''Updates the values of matrix P
+    """Updates the values of matrix P.
 
-  Args:
-    P:
+    Parameters
+    ----------
+    P: np.ndarray
+		the first matrix in factorization
+	Q: np.ndarray
+		the second matrix in factorization
+	R: scipy.sparse.coo_matrix
+		sparse ratings matrix
+	alpha: np.float
+		Learning rate
+	lam: np.float
+		Regularization rate
 
-  Returns:
-    np.ndarray: P itself after adjusting the values
+    Returns
+    -------
+    np.ndarray
+		P itself after adjusting the values
 
-  '''
+    """
+
 
   assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
 
@@ -43,6 +56,28 @@ def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
 
 
 def update_Q(P, Q, R, alpha = 0.001, lam = 0.001):
+    """Updates the values of matrix Q.
+
+    Parameters
+    ----------
+    P: np.ndarray
+		the first matrix in factorization
+	Q: np.ndarray
+		the second matrix in factorization
+	R: scipy.sparse.coo_matrix
+		sparse ratings matrix
+	alpha: np.float
+		Learning rate
+	lam: np.float
+		Regularization rate
+
+    Returns
+    -------
+    np.ndarray
+		Q itself after adjusting the values
+
+    """
+
 
   assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
 
@@ -69,8 +104,26 @@ def update_Q(P, Q, R, alpha = 0.001, lam = 0.001):
 
   return Q
 
-
 def calculate_loss(P, Q, R, lam):
+    """Calculates the loss for ALS algorithm.
+
+    Parameters
+    ----------
+    P: np.ndarray
+		the first matrix in factorization
+	Q: np.ndarray
+		the second matrix in factorization
+	R: scipy.sparse.coo_matrix
+		sparse ratings matrix
+	lam: np.float
+		Regularization rate
+
+    Returns
+    -------
+    res : np.float
+        The current loss of training.
+
+    """
 
   R_prod = (P @ Q.T)
 

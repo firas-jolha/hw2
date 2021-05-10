@@ -1,51 +1,21 @@
-import pandas as pd
-from scipy import sparse
-from torch import nn
-import torch.nn.functional as f
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from read import read_data
 from os.path import join as path_join
 import numpy as np
 from preprocess import map_ids
+from nca import NCA
 
-
-class NCA(nn.Module):
-  def __init__(self, config):
-    super().__init__()
-    self.config = config
-    self.n_users = config['n_users']
-    self.n_items = config['n_items']
-    self.k = config['k']
-
-    self.embed_user = nn.Embedding(self.n_users, self.k)
-    self.embed_item = nn.Embedding(self.n_items, self.k)
-
-    self.fc_layers = nn.ModuleList()
-    for idx, (in_size, out_size) in enumerate(zip(config['layers'][:-1], config['layers'][1:])):
-        self.fc_layers.append(torch.nn.Linear(in_size, out_size))
-
-
-    self.dropout = nn.Dropout(0.2)
-
-    self.output = nn.Linear(config['layers'][-1],  1)
-    self.output_f = nn.Sigmoid()
-
-  def forward(self, users, items):
-
-    users_x = self.embed_user(users)
-    items_x = self.embed_item(items)
-
-    x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
-
-    for i in range(len(self.fc_layers)):
-      x = self.fc_layers[i](x)
-      x = nn.ReLU()(x)
-      x = self.dropout(x)
-
-    x = self.output(x)
-    x = self.output_f(x) * config['rating_range'] + config['lowest_rating']
-    return x
+def do_one_hot(data, n_classes):
+  batch_size = data.shape[0]
+  res = torch.zeros(batch_size, n_classes, dtype = torch.int)
+  data = data.long()
+  x = np.array(range(res.shape[0]))
+  y = np.array(data)
+  res[x, y] = 1
+  # for i in range():
+  #   res[i, data[i]] = 1
+  return res
 
 
 def train(config):
@@ -56,8 +26,8 @@ def train(config):
     # Read training data
     user_ids, movie_ids, ratings = read_data(training = True)
 
-    user_ids = map_ids(user_ids)
-    movie_ids = map_ids(movie_ids)
+    user_ids = map_ids(user_ids, users = True)
+    movie_ids = map_ids(movie_ids, users = False)
 
     # Input Data
     users = torch.Tensor(user_ids).int()
@@ -66,6 +36,7 @@ def train(config):
 
     config['n_users'] = np.unique(user_ids).size
     config['n_items'] = np.unique(movie_ids).size
+    config['layers'][0] = (config['n_users']+config['n_items']) * config['k']
 
     print("Configurations")
     print(config)
@@ -103,8 +74,13 @@ def train(config):
       # Iterate over batches
       for batch_users, batch_movies, batch_ratings in data_loader:
 
-        users = batch_users.to(device)
-        movies = batch_movies.to(device)
+        # batch_users = do_one_hot(batch_users, config['n_users'])
+        batch_users = torch.nn.functional.one_hot(batch_users.long(), config['n_users'])
+        batch_movies = torch.nn.functional.one_hot(batch_movies.long(), config['n_items'])
+        # batch_movies = do_one_hot(batch_movies, config['n_items'])
+
+        users = batch_users.int().to(device)
+        movies = batch_movies.int().to(device)
         ratings = batch_ratings.to(device)
 
         optimizer.zero_grad()
@@ -117,6 +93,7 @@ def train(config):
         optimizer.step()
 
         epoch_loss.append(loss.item())
+        print(loss.item())
 
       avg_epoch_loss = np.mean(epoch_loss)
       losses.append(avg_epoch_loss)
@@ -125,22 +102,23 @@ def train(config):
 
 
     MODELS_PATH = "models"
+
     # Save the trained model
     path = path_join(MODELS_PATH, "acf_new.pth")
-    torch.save(model.state_dict, path)
+    torch.save(model.state_dict(), path)
 
 if __name__=="__main__":
     k = 7
-    # sparse.load_npz()
+
     config = {
        'k': k, # Latent Space Dimension
-       'layers':[k * 2, 64, 16, 8],  # sizes of fully connected layers
+       'layers':[-1, 64, 16, 8],  # sizes of fully connected layers
        'rating_range': 4,  # Range of rating (5 - 1 = 4)
        'lowest_rating':1, # The lowest rating (1)
        'lr' : 0.001,
        'batch_size': 100,
-       'epochs': 4,
-       'critertion': nn.MSELoss()
+       'epochs': 10,
+       'critertion': torch.nn.MSELoss()
     }
 
     train(config)

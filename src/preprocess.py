@@ -2,23 +2,83 @@ import pandas as pd
 from os.path import join as path_join
 import numpy as np
 from scipy import sparse
+from read import read_data
 
-def map_userid(id):
+def map_id(id, user = True):
+    """Maps the id of user or movie to basic indexing [0-n].
 
-    pass
+    Parameters
+    ----------
+    id : int
+        user or movie id.
+    user : boolean
+        True for mapping user id and False for mapping movie id.
 
-def unmap_userid(id):
+    Returns
+    -------
+    int
+        the id after mapping.
 
-    pass
+    """
+
+    # Reading the mapping array from models folder
+    MODELS_PATH = "models"
+    uq = None
+    if user:
+        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+    else:
+        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
 
 
-def map_ids(series):
+    # Returning the new id
+    if id in uq:
+        return np.where(uq==id)[0][0]
+    else:
+        return None
+
+
+def unmap_id(id, user=True):
+    """Returns the original ids of user or movie.
+
+    Parameters
+    ----------
+    id : int
+        user or movie id.
+    user : boolean
+        True for remapping user id and False for remapping movie id.
+
+    Returns
+    -------
+    int
+        the id after remapping.
+
+    """
+
+    # Reading the mapping array from models folder
+    MODELS_PATH = "models"
+    uq = None
+    if user:
+        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+    else:
+        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+
+
+    # Returning the new id
+    if id < uq.size:
+        return uq[id]
+    else:
+        return None
+
+
+def map_ids(series, users = True):
     """Resets ids of both users and items to the range [0-n].
 
     Parameters
     ----------
     series : pd.Series
         The series of ids to be reset.
+    users : boolean
+        True for mapping user ids and False for mapping movie ids.
 
     Returns
     -------
@@ -28,12 +88,18 @@ def map_ids(series):
     """
 
     # Taking the unique values of the input
-    uq = series.unique()
+    # uq = series.unique()
+    MODELS_PATH = "models"
+    uq = None
+    if users:
+        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+    else:
+        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
 
     # remapping the values
     return series.map(pd.Series(range(0, uq.size), index = uq))
 
-def unmap_ids(series, original_series):
+def unmap_ids(series, users = True):
     """Returns back the original ids of series being converted by map_ids function given the original series.
 
     Parameters
@@ -50,11 +116,34 @@ def unmap_ids(series, original_series):
 
     """
     # Taking the unique values
-    uq = original_series.unique()
+
+    MODELS_PATH = "models"
+    uq = None
+    if users:
+        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+    else:
+        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+    # uq = original_series.unique()
 
     # Remapping
     return series.map(pd.Series(uq, index = range(0, uq.size)))
 
+def create_mapping(series):
+    """Creates the mapping for given series.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The original series to be mapped.
+
+    Returns
+    -------
+    uq : pd.Series
+        The unqiue values in the series after sorting.
+
+    """
+    uq = np.sort(series.unique())
+    return uq
 
 def preprocess():
     """Reads the dataset from data folder then preprocess it and returns the results of both training and test dataset.
@@ -67,17 +156,6 @@ def preprocess():
         Sparse matrix for ratings of test data
 
     """
-    # user_ids : pd.Series
-    #     User ids after resetting.
-    # movie_ids : pd.Series
-    #     Movie ids after resetting.
-    # ratings : pd.series
-    #     Ratings of users to movies for training purposes.
-    # n_users : np.int
-    #     number of unique users in the training dataset.
-    # n_movies : np.int
-    #     number of unique movies in the training dataset.
-
 
     # Set Data Path
     DATA_PATH = "data"
@@ -91,16 +169,28 @@ def preprocess():
     movie_ids = train_df['movieId']
     ratings = train_df['rating']
 
+    # Create the mapping and save it for later usage in testing
+    all_users = create_mapping(pd.concat([train_df['userId'], test_df['userId']], axis = 0))
+    all_movies = create_mapping(pd.concat([train_df['movieId'], test_df['movieId']], axis = 0))
+
+
+    # Save the mapping arrays for users and movies
+    MODELS_PATH = "models"
+    with open(path_join(MODELS_PATH, "all_users_indices.npy"), "wb") as f:
+        np.save(f, all_users)
+
+    with open(path_join(MODELS_PATH, "all_movies_indices.npy"), "wb") as f:
+        np.save(f, all_movies)
+
 
     # Resetting the ids of training data to [0-n]
-    user_ids = map_ids(user_ids)
-    movie_ids = map_ids(movie_ids)
-
+    user_ids = map_ids(user_ids, users = True)
+    movie_ids = map_ids(movie_ids, users = False)
 
 
     # Resetting the ids of test data
-    test_user_ids = map_ids(test_df['userId'])
-    test_movie_ids = map_ids(test_df['movieId'])
+    test_user_ids = map_ids(test_df['userId'], users = True)
+    test_movie_ids = map_ids(test_df['movieId'], users = False)
     test_ratings = test_df['rating']
 
     # Statistics of training data
@@ -114,8 +204,8 @@ def preprocess():
 
     # Returning the indices back can be done using unmap_ids function
     # Example
-    # unmap_ids(movie_ids, train_df['movieId'])
-    # unmap_ids(user_ids, train_df['userId'])
+    # unmap_ids(movie_ids, users = False)
+    # unmap_ids(user_ids, users = True)
 
     # Define the training rating matrix as sparse matrix
 
@@ -153,3 +243,4 @@ if __name__=='__main__':
     print(f'Rating matrix for testing : {R2.shape}')
     print(f'# Users in test set : {R2.shape[0]}')
     print(f'# Movies in test set : {R2.shape[1]}')
+    # print(map_id(118696, user=False))

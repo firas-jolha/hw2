@@ -2,6 +2,23 @@ import pandas as pd
 from os.path import join as path_join
 
 def read_data(training = True):
+    """Reads the data from data folder.
+
+    Parameters
+    ----------
+    training : boolean
+        True for reading training data and False for reading test data.
+
+    Returns
+    -------
+    user_ids : pd.Series
+        series of user ids.
+    movie_ids : pd.Series
+        series of movie ids.
+    ratings : pd.Series
+        series of ratings.
+
+    """
 
     # Set Data Path
     DATA_PATH = "data"
