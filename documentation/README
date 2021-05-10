@@ -1,2 +1,14 @@
-# Documentation
+# Code Documentation
+
+This repository includes implementations of two collaborative filtering methods. Matrix factorization trained using Alternating Least Squares (ALS) and Artificial Nerual Networks (ANN).
+
+The repository mainly includes 3 scripts for training and testing the models.
+
+## preprocess.py
+
+
+## train.py
+
+
+## test.py
 
