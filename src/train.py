@@ -25,13 +25,19 @@ def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
 
   M[x1, x2] = 1
 
-  R_hat = P @ Q.T
+  P_tau = P[x1, :]
+  Q_tau = Q[x2, :]
 
+  # Inner Product
+  prod = np.sum((P_tau * Q_tau), axis = 1)
 
-  res = np.multiply(R_hat - R, M)
+  R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
 
-  gradient = - alpha * (lam * P - (res @ Q))
-  P += gradient
+  res = R_hat - R
+
+  gradient = alpha * ((res @ Q) - lam * P)
+
+  P += - gradient
 
   return P
 
@@ -45,13 +51,20 @@ def update_Q(P, Q, R, alpha = 0.001, lam = 0.001):
 
   M[x1, x2] = 1
 
-  R_hat = P @ Q.T
 
-  res = np.multiply(R_hat - R, M)
+  P_tau = P[x1, :]
+  Q_tau = Q[x2, :]
 
-  gradient = - alpha * (lam * Q - (res.T @ P))
+  # Inner Product
+  prod = np.sum((P_tau * Q_tau), axis = 1)
 
-  Q += gradient
+  R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
+
+  res = R_hat - R
+
+  gradient = alpha * ((res.T @ P) - lam * Q )
+
+  Q += - gradient
 
 
   return Q
@@ -71,7 +84,7 @@ def calculate_loss(P, Q, R, lam):
   b_u = b_u[x1] - mu
   b_i = b_i[x2] - mu
 
-  res = R_tau - (R_hat + mu + b_u + b_i)
+  res = (R_hat + mu + b_u + b_i) - R_tau
 
   res = np.square(res)
 
@@ -138,6 +151,7 @@ def train(config):
 	  else:
 	    last_loss = test_loss
 
+	print(f"Lowest loss reached for test data is {last_loss}")
 
 	MODELS_PATH = "models"
 
@@ -148,12 +162,14 @@ def train(config):
 	  np.save(f, best_Q)
 
 
+
+
 if __name__ == "__main__":
 	config = {
 	'k': 7,
 	'lr': 1e-6,
-	'lambda': 1e-5,
-	'epochs': 50,
+	'lambda': 1e-12,
+	'epochs': 30,
 	}
 
 	# Do Training
