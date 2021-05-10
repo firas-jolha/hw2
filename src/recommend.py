@@ -68,17 +68,36 @@ def recommend(user_id, P, Q, top_n):
 
 if __name__=='__main__':
 
-    # Return recommendations for user number 6321
-    user_id = 612321
-    top_n = 10
-
-    print(f"Recommendations for User : {user_id}")
-
     # Loading the matrices P and Q
     MODELS_PATH = "models"
 
     P = np.load(path_join(MODELS_PATH, "P_ARRAY_CF.npy"))
     Q = np.load(path_join(MODELS_PATH, "Q_ARRAY_CF.npy"))
+
+    # Return recommendations for user number 6321
+    user_id = 6321
+    top_n = 10
+
+    print(f"Recommendations for User : {user_id}")
+
+    # Call recommend utility
+    df = recommend(user_id, P, Q, top_n)
+
+    print(df)
+
+    # Return recommendations for not found user number 11231232
+    user_id = 11231232
+    print(f"Recommendations for User : {user_id}")
+
+    # Call recommend utility
+    df = recommend(user_id, P, Q, top_n)
+
+    print(df)
+
+
+    # Return recommendations for not found user number 1
+    user_id = 1
+    print(f"Recommendations for User : {user_id}")
 
     # Call recommend utility
     df = recommend(user_id, P, Q, top_n)

@@ -9,6 +9,36 @@ from os.path import join as path_join
 import numpy as np
 
 class NCA(nn.Module):
+    """Short summary.
+
+    Parameters
+    ----------
+    config : type
+        Description of parameter `config`.
+
+    Attributes
+    ----------
+    n_users : type
+        Description of attribute `n_users`.
+    n_items : type
+        Description of attribute `n_items`.
+    k : type
+        Description of attribute `k`.
+    embed_user : type
+        Description of attribute `embed_user`.
+    embed_item : type
+        Description of attribute `embed_item`.
+    fc_layers : type
+        Description of attribute `fc_layers`.
+    dropout : type
+        Description of attribute `dropout`.
+    output : type
+        Description of attribute `output`.
+    output_f : type
+        Description of attribute `output_f`.
+    config
+
+    """
   def __init__(self, config):
     super().__init__()
     self.config = config

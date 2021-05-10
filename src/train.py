@@ -9,50 +9,48 @@ import numpy as np
 def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
     """Updates the values of matrix P.
 
-    Parameters
-    ----------
-    P: np.ndarray
-		the first matrix in factorization
-	Q: np.ndarray
-		the second matrix in factorization
-	R: scipy.sparse.coo_matrix
-		sparse ratings matrix
-	alpha: np.float
-		Learning rate
-	lam: np.float
-		Regularization rate
+        Parameters
+        ----------
+        P: np.ndarray
+        	the first matrix in factorization
+        Q: np.ndarray
+        	the second matrix in factorization
+        R: scipy.sparse.coo_matrix
+        	sparse ratings matrix
+        alpha: np.float
+        	Learning rate
+        lam: np.float
+        	Regularization rate
 
-    Returns
-    -------
-    np.ndarray
-		P itself after adjusting the values
+        Returns
+        -------
+        np.ndarray
+        	P itself after adjusting the values
 
     """
+    assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
 
+    M = np.zeros(R.shape)
 
-  assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
+    x1, x2 = R.nonzero()
 
-  M = np.zeros(R.shape)
+    # M[x1, x2] = 1
 
-  x1, x2 = R.nonzero()
+    P_tau = P[x1, :]
+    Q_tau = Q[x2, :]
 
-  M[x1, x2] = 1
+    # Inner Product
+    prod = np.sum((P_tau * Q_tau), axis = 1)
 
-  P_tau = P[x1, :]
-  Q_tau = Q[x2, :]
+    R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
 
-  # Inner Product
-  prod = np.sum((P_tau * Q_tau), axis = 1)
+    res = R_hat - R
 
-  R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
+    gradient = alpha * ((res @ Q) - lam * P)
 
-  res = R_hat - R
+    P += - gradient
 
-  gradient = alpha * ((res @ Q) - lam * P)
-
-  P += - gradient
-
-  return P
+    return P
 
 
 def update_Q(P, Q, R, alpha = 0.001, lam = 0.001):
@@ -75,34 +73,33 @@ def update_Q(P, Q, R, alpha = 0.001, lam = 0.001):
     -------
     np.ndarray
 		Q itself after adjusting the values
-
     """
 
+    assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
 
-  assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
+    M = np.zeros(R.shape)
+    x1, x2 = R.nonzero()
 
-  M = np.zeros(R.shape)
-  x1, x2 = R.nonzero()
-
-  M[x1, x2] = 1
-
-
-  P_tau = P[x1, :]
-  Q_tau = Q[x2, :]
-
-  # Inner Product
-  prod = np.sum((P_tau * Q_tau), axis = 1)
-
-  R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
-
-  res = R_hat - R
-
-  gradient = alpha * ((res.T @ P) - lam * Q )
-
-  Q += - gradient
+    # # Mask
+    # M[x1, x2] = 1
 
 
-  return Q
+    P_tau = P[x1, :]
+    Q_tau = Q[x2, :]
+
+    # Inner Product
+    prod = np.sum((P_tau * Q_tau), axis = 1)
+
+    R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
+
+    res = R_hat - R
+
+    gradient = alpha * ((res.T @ P) - lam * Q )
+
+    Q += - gradient
+
+
+    return Q
 
 def calculate_loss(P, Q, R, lam):
     """Calculates the loss for ALS algorithm.
@@ -125,26 +122,27 @@ def calculate_loss(P, Q, R, lam):
 
     """
 
-  R_prod = (P @ Q.T)
+    R_prod = (P @ Q.T)
 
-  x1, x2 = R.nonzero()
-  R_hat = R_prod[x1, x2]
-  R_tau = R.data
+    x1, x2 = R.nonzero()
+    R_hat = R_prod[x1, x2]
+    R_tau = R.data
 
-  mu = np.mean(R_hat) # Overall average rating
-  b_u = np.mean(R_prod, axis = 1)
-  b_i = np.mean(R_prod, axis = 0)
-  b_u = b_u[x1] - mu
-  b_i = b_i[x2] - mu
+    mu = np.mean(R_hat) # Overall average rating
+    b_u = np.mean(R_prod, axis = 1)
+    b_i = np.mean(R_prod, axis = 0)
+    b_u = b_u[x1] - mu
+    b_i = b_i[x2] - mu
 
-  res = (R_hat + mu + b_u + b_i) - R_tau
+    res = (R_hat + mu + b_u + b_i) - R_tau
 
-  res = np.square(res)
+    res = np.square(res)
 
-  res = np.mean(res)
-  res += lam *(np.linalg.norm(P) + np.linalg.norm(Q)) # Regularization Term
+    res = np.mean(res)
 
-  return res
+    res += lam *(np.linalg.norm(P) + np.linalg.norm(Q)) # Regularization Term
+
+    return res
 
 
 def train(config):

@@ -67,30 +67,6 @@ def test_model(config):
     print(f"Loss for test data is {np.mean(losses)}")
 
 
-def recommend(user_id):
-    user = map_id(user_id, user = True)
-    ts = torch.Tensor([user])
-
-    MODELS_PATH = "models"
-
-    all_movies = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
-    model(user, )
-    print(ts)
-
-    # recommend_user = np.repeat([1], user_ids.size).reshape(users.shape)
-    # # print(recommend_user)
-    # movies = torch.Tensor(np.array(range(config['n_items']))).int()
-    #
-    #
-    # us = torch.Tensor(recommend_user).int()
-    # recommendations = model(us, movies).data.numpy()
-    # print(np.argsort(recommendations)[-10:][::-1])
-    # print(np.sort(recommendations)[-10:][::-1])
-
-    # print(model(torch.Tensor(np.array([0])).int(), movies))
-
-
-
 
 if __name__=="__main__":
     k = 7
@@ -100,6 +76,3 @@ if __name__=="__main__":
     'rating_range': 4,  # Range of rating (5 - 1 = 4)
     'lowest_rating':1 # The lowest rating (1)
     }
-
-    # test_model(config)
-    recommend(1)

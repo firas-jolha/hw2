@@ -6,19 +6,31 @@ import numpy as np
 from preprocess import map_ids
 from nca import NCA
 
-def do_one_hot(data, n_classes):
-  batch_size = data.shape[0]
-  res = torch.zeros(batch_size, n_classes, dtype = torch.int)
-  data = data.long()
-  x = np.array(range(res.shape[0]))
-  y = np.array(data)
-  res[x, y] = 1
-  # for i in range():
-  #   res[i, data[i]] = 1
-  return res
+# def do_one_hot(data, n_classes):
+#   batch_size = data.shape[0]
+#   res = torch.zeros(batch_size, n_classes, dtype = torch.int)
+#   data = data.long()
+#   x = np.array(range(res.shape[0]))
+#   y = np.array(data)
+#   res[x, y] = 1
+#   # for i in range():
+#   #   res[i, data[i]] = 1
+#   return res
 
 
 def train(config):
+    """Trains the neural network with provided configurations.
+
+    Parameters
+    ----------
+    config : dictionary
+        Configurations of training procedure.
+
+    Returns
+    -------
+    None
+
+    """
 
     # Latent Space Dimension
     k = config['k']
@@ -74,10 +86,10 @@ def train(config):
       # Iterate over batches
       for batch_users, batch_movies, batch_ratings in data_loader:
 
-        # batch_users = do_one_hot(batch_users, config['n_users'])
+        # Do one-hot encoding
         batch_users = torch.nn.functional.one_hot(batch_users.long(), config['n_users'])
         batch_movies = torch.nn.functional.one_hot(batch_movies.long(), config['n_items'])
-        # batch_movies = do_one_hot(batch_movies, config['n_items'])
+
 
         users = batch_users.int().to(device)
         movies = batch_movies.int().to(device)
@@ -112,7 +124,7 @@ if __name__=="__main__":
 
     config = {
        'k': k, # Latent Space Dimension
-       'layers':[-1, 64, 16, 8],  # sizes of fully connected layers
+       'layers':[-1, 64, 16, 8],  # sizes of fully connected layers (first fc layer is -1 because it will be set inside training)
        'rating_range': 4,  # Range of rating (5 - 1 = 4)
        'lowest_rating':1, # The lowest rating (1)
        'lr' : 0.001,
