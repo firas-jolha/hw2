@@ -10,24 +10,28 @@ COPY requirements.txt .
 #Install the dependencies
 RUN pip install -r requirements.txt
 
-RUN ls
+RUN mkdir ./src
 
 #Copy the script folder to the working directory 
-COPY src/ .
+COPY src/ ./src
+
+RUN mkdir ./data
 
 #Copy the data folder to the working directory
-COPY data/ .
+COPY data/ ./data
+
+RUN mkdir ./models
 
 #Copy the models folder to the working directory for testing purposes
-COPY models/ .
+COPY models/ ./models
 
 #RUN echo "Training Stage"
 
 #Run the train.py script in the container
-CMD ["python", "./train.py"]
+CMD ["python", "./src/train.py"]
 
 
 #RUN echo "Testing Stage"
 
 #Run the test.py script in the container
-CMD ["python", "./test.py"]
+CMD ["python", "./src/test.py"]
