@@ -131,3 +131,6 @@ dmypy.json
 
 # Json conifg files of Atom editor
 *.json
+
+# DRAFT.md
+DRAFT.md

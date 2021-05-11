@@ -21,4 +21,4 @@ TEST_DATA_PATH = path_join(DATA_PATH, "test.csv")
 
 
 # For documentation Run
-# pdoc --html src/*.py 
+# pdoc --html -o documentation/html -f src/*.py
