@@ -16,7 +16,7 @@ This method uses an artificial neural network to learn the latent space of the r
 
 ---
 
-# Installation
+# Installation & Running
 
 You have two options to run this program.
 
