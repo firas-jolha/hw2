@@ -12,7 +12,7 @@ RUN pip install -r requirements.txt
 
 RUN mkdir ./src
 
-#Copy the script folder to the working directory 
+#Copy the script folder to the working directory
 COPY src/ ./src
 
 RUN mkdir ./data
@@ -28,10 +28,10 @@ COPY models/ ./models
 #RUN echo "Training Stage"
 
 #Run the train.py script in the container
-CMD ["python", "./src/train.py"]
+RUN python3 ./src/train.py
 
 
 #RUN echo "Testing Stage"
 
 #Run the test.py script in the container
-CMD ["python", "./src/test.py"]
+RUN python3 ./src/test.py
