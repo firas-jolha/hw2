@@ -30,49 +30,122 @@
 import torch
 
 class NCA(nn.Module):
-  def __init__(self, config):
-    super().__init__()
-    self.config = config
-    self.n_users = config[&#39;n_users&#39;]
-    self.n_items = config[&#39;n_items&#39;]
-    self.k = config[&#39;k&#39;]
+    &#34;&#34;&#34;Our custom Nerual Collaborative Filtering Model.
 
-    self.embed_user = nn.Embedding(self.n_users, self.k)
-    self.embed_item = nn.Embedding(self.n_items, self.k)
+        Parameters
+        ----------
+        config : dictionary
+            Settings of the model.
 
-    self.fc_layers = nn.ModuleList()
-    for idx, (in_size, out_size) in enumerate(zip(config[&#39;layers&#39;][:-1], config[&#39;layers&#39;][1:])):
-        self.fc_layers.append(torch.nn.Linear(in_size, out_size))
+        Attributes
+        ----------
+        n_users : np.int
+            Maximum number of users in the system.
+        n_items : np.int
+            Maximum number of items (e.g. movies, products...) in the system.
+        k : np.int
+            Factorization rank.
+        embed_user : torch.nn.Embedding
+            Embedding layer for users data.
+        embed_item : torch.nn.Embedding
+            Embedding layer for users data.
+        fc_layers : torch.nn.ModuleList
+            List of forward fully connected linear layers.
+        dropout : torch.nn.Dropout
+            Dropout layer.
+        output : torch.nn.Linear
+            The output layer of the network.
+        output_f : torch.nn.functional.Sigmoid
+            The activation function of the output layer.
+        config : dictionary
+            The training configurations passed in the constructor of NCA class.
 
-
-    self.dropout = nn.Dropout(0.2)
-
-    self.output = nn.Linear(config[&#39;layers&#39;][-1],  1)
-    self.output_f = nn.Sigmoid()
-
-  def forward(self, users, items):
-
-    users_x = self.embed_user(users)
-    items_x = self.embed_item(items)
-
-    x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
-
-    n = 2
-    if self.config[&#39;one_hot_encoding&#39;]:
-        n = (self.n_users + self.n_items ) # One hot encoding
-    else:
-        n = 2 # no one hot encoding
-    x = x.view(-1, n * self.k)
+    &#34;&#34;&#34;
 
 
-    for i in range(len(self.fc_layers)):
-      x = self.fc_layers[i](x)
-      x = nn.ReLU()(x)
-      x = self.dropout(x)
+    def __init__(self, config):
+        &#34;&#34;&#34;constructor.
 
-    x = self.output(x)
-    x = self.output_f(x) * self.config[&#39;rating_range&#39;] + self.config[&#39;lowest_rating&#39;]
-    return x</code></pre>
+        Parameters
+        ----------
+        config : dictionary
+            The settings of the neural network.
+
+        Returns
+        -------
+        None
+
+        &#34;&#34;&#34;
+        super().__init__()
+
+        self.config = config
+        self.n_users = config[&#39;n_users&#39;]
+        self.n_items = config[&#39;n_items&#39;]
+        self.k = config[&#39;k&#39;]
+
+        # Define the layers
+        self.embed_user = nn.Embedding(self.n_users, self.k)
+        self.embed_item = nn.Embedding(self.n_items, self.k)
+
+        # The stacked Linear layers in which the in_features and out_features are managed using this loop
+        self.fc_layers = nn.ModuleList()
+        for idx, (in_size, out_size) in enumerate(zip(config[&#39;layers&#39;][:-1], config[&#39;layers&#39;][1:])):
+            self.fc_layers.append(torch.nn.Linear(in_size, out_size))
+
+
+        self.dropout = nn.Dropout(0.2)
+
+        # The output layer
+        self.output = nn.Linear(config[&#39;layers&#39;][-1],  1)
+
+        # The activation function of the last layer
+        self.output_f = nn.Sigmoid()
+
+    def forward(self, users, items):
+        &#34;&#34;&#34;Forward pass on the data.
+
+        Parameters
+        ----------
+        users : torch.Tensor
+            Users tensor.
+        items : torch.Tensor
+            Items tensor.
+
+        Returns
+        -------
+        torch.Tesnor
+            The tensor after the forward pass.
+
+        &#34;&#34;&#34;
+
+        # Embedding users and items separately
+        users_x = self.embed_user(users)
+        items_x = self.embed_item(items)
+
+        # Concatenate them
+        x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
+
+        # The in_features for the first fc layer will be determined according to the preprocessing step
+        n = 2 # Users  + Items
+        if self.config[&#39;one_hot_encoding&#39;]:
+            n = (self.n_users + self.n_items ) # One hot encoding
+        else:
+            n = 2 # no one hot encoding
+
+        # Reshape the input to the fc layers
+        x = x.view(-1, n * self.k)
+    
+
+        for i in range(len(self.fc_layers)):
+          x = self.fc_layers[i](x)
+          x = nn.ReLU()(x)
+          x = self.dropout(x)
+
+        x = self.output(x)
+
+        # Scaling the output from [0-1] to [1-5]
+        x = self.output_f(x) * self.config[&#39;rating_range&#39;] + self.config[&#39;lowest_rating&#39;]
+        return x</code></pre>
 </details>
 </section>
 <section>
@@ -89,77 +162,167 @@ class NCA(nn.Module):
 <span>(</span><span>config)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all neural network modules.</p>
-<p>Your models should also subclass this class.</p>
-<p>Modules can also contain other Modules, allowing to nest them in
-a tree structure. You can assign the submodules as regular attributes::</p>
-<pre><code>import torch.nn as nn
-import torch.nn.functional as F
-
-class Model(nn.Module):
-    def __init__(self):
-        super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5)
-        self.conv2 = nn.Conv2d(20, 20, 5)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        return F.relu(self.conv2(x))
-</code></pre>
-<p>Submodules assigned in this way will be registered, and will have their
-parameters converted too when you call :meth:<code>to</code>, etc.</p>
-<p>:ivar training: Boolean represents whether this module is in training or
-evaluation mode.
-:vartype training: bool</p>
-<p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p></div>
+<div class="desc"><p>Our custom Nerual Collaborative Filtering Model.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>config</code></strong> :&ensp;<code>dictionary</code></dt>
+<dd>Settings of the model.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>n_users</code></strong> :&ensp;<code>np.int</code></dt>
+<dd>Maximum number of users in the system.</dd>
+<dt><strong><code>n_items</code></strong> :&ensp;<code>np.int</code></dt>
+<dd>Maximum number of items (e.g. movies, products&hellip;) in the system.</dd>
+<dt><strong><code>k</code></strong> :&ensp;<code>np.int</code></dt>
+<dd>Factorization rank.</dd>
+<dt><strong><code>embed_user</code></strong> :&ensp;<code>torch.nn.Embedding</code></dt>
+<dd>Embedding layer for users data.</dd>
+<dt><strong><code>embed_item</code></strong> :&ensp;<code>torch.nn.Embedding</code></dt>
+<dd>Embedding layer for users data.</dd>
+<dt><strong><code>fc_layers</code></strong> :&ensp;<code>torch.nn.ModuleList</code></dt>
+<dd>List of forward fully connected linear layers.</dd>
+<dt><strong><code>dropout</code></strong> :&ensp;<code>torch.nn.Dropout</code></dt>
+<dd>Dropout layer.</dd>
+<dt><strong><code>output</code></strong> :&ensp;<code>torch.nn.Linear</code></dt>
+<dd>The output layer of the network.</dd>
+<dt><strong><code>output_f</code></strong> :&ensp;<code>torch.nn.functional.Sigmoid</code></dt>
+<dd>The activation function of the output layer.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code>dictionary</code></dt>
+<dd>The training configurations passed in the constructor of NCA class.</dd>
+</dl>
+<p>constructor.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>config</code></strong> :&ensp;<code>dictionary</code></dt>
+<dd>The settings of the neural network.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NCA(nn.Module):
-  def __init__(self, config):
-    super().__init__()
-    self.config = config
-    self.n_users = config[&#39;n_users&#39;]
-    self.n_items = config[&#39;n_items&#39;]
-    self.k = config[&#39;k&#39;]
+    &#34;&#34;&#34;Our custom Nerual Collaborative Filtering Model.
 
-    self.embed_user = nn.Embedding(self.n_users, self.k)
-    self.embed_item = nn.Embedding(self.n_items, self.k)
+        Parameters
+        ----------
+        config : dictionary
+            Settings of the model.
 
-    self.fc_layers = nn.ModuleList()
-    for idx, (in_size, out_size) in enumerate(zip(config[&#39;layers&#39;][:-1], config[&#39;layers&#39;][1:])):
-        self.fc_layers.append(torch.nn.Linear(in_size, out_size))
+        Attributes
+        ----------
+        n_users : np.int
+            Maximum number of users in the system.
+        n_items : np.int
+            Maximum number of items (e.g. movies, products...) in the system.
+        k : np.int
+            Factorization rank.
+        embed_user : torch.nn.Embedding
+            Embedding layer for users data.
+        embed_item : torch.nn.Embedding
+            Embedding layer for users data.
+        fc_layers : torch.nn.ModuleList
+            List of forward fully connected linear layers.
+        dropout : torch.nn.Dropout
+            Dropout layer.
+        output : torch.nn.Linear
+            The output layer of the network.
+        output_f : torch.nn.functional.Sigmoid
+            The activation function of the output layer.
+        config : dictionary
+            The training configurations passed in the constructor of NCA class.
 
-
-    self.dropout = nn.Dropout(0.2)
-
-    self.output = nn.Linear(config[&#39;layers&#39;][-1],  1)
-    self.output_f = nn.Sigmoid()
-
-  def forward(self, users, items):
-
-    users_x = self.embed_user(users)
-    items_x = self.embed_item(items)
-
-    x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
-
-    n = 2
-    if self.config[&#39;one_hot_encoding&#39;]:
-        n = (self.n_users + self.n_items ) # One hot encoding
-    else:
-        n = 2 # no one hot encoding
-    x = x.view(-1, n * self.k)
+    &#34;&#34;&#34;
 
 
-    for i in range(len(self.fc_layers)):
-      x = self.fc_layers[i](x)
-      x = nn.ReLU()(x)
-      x = self.dropout(x)
+    def __init__(self, config):
+        &#34;&#34;&#34;constructor.
 
-    x = self.output(x)
-    x = self.output_f(x) * self.config[&#39;rating_range&#39;] + self.config[&#39;lowest_rating&#39;]
-    return x</code></pre>
+        Parameters
+        ----------
+        config : dictionary
+            The settings of the neural network.
+
+        Returns
+        -------
+        None
+
+        &#34;&#34;&#34;
+        super().__init__()
+
+        self.config = config
+        self.n_users = config[&#39;n_users&#39;]
+        self.n_items = config[&#39;n_items&#39;]
+        self.k = config[&#39;k&#39;]
+
+        # Define the layers
+        self.embed_user = nn.Embedding(self.n_users, self.k)
+        self.embed_item = nn.Embedding(self.n_items, self.k)
+
+        # The stacked Linear layers in which the in_features and out_features are managed using this loop
+        self.fc_layers = nn.ModuleList()
+        for idx, (in_size, out_size) in enumerate(zip(config[&#39;layers&#39;][:-1], config[&#39;layers&#39;][1:])):
+            self.fc_layers.append(torch.nn.Linear(in_size, out_size))
+
+
+        self.dropout = nn.Dropout(0.2)
+
+        # The output layer
+        self.output = nn.Linear(config[&#39;layers&#39;][-1],  1)
+
+        # The activation function of the last layer
+        self.output_f = nn.Sigmoid()
+
+    def forward(self, users, items):
+        &#34;&#34;&#34;Forward pass on the data.
+
+        Parameters
+        ----------
+        users : torch.Tensor
+            Users tensor.
+        items : torch.Tensor
+            Items tensor.
+
+        Returns
+        -------
+        torch.Tesnor
+            The tensor after the forward pass.
+
+        &#34;&#34;&#34;
+
+        # Embedding users and items separately
+        users_x = self.embed_user(users)
+        items_x = self.embed_item(items)
+
+        # Concatenate them
+        x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
+
+        # The in_features for the first fc layer will be determined according to the preprocessing step
+        n = 2 # Users  + Items
+        if self.config[&#39;one_hot_encoding&#39;]:
+            n = (self.n_users + self.n_items ) # One hot encoding
+        else:
+            n = 2 # no one hot encoding
+
+        # Reshape the input to the fc layers
+        x = x.view(-1, n * self.k)
+    
+
+        for i in range(len(self.fc_layers)):
+          x = self.fc_layers[i](x)
+          x = nn.ReLU()(x)
+          x = self.dropout(x)
+
+        x = self.output(x)
+
+        # Scaling the output from [0-1] to [1-5]
+        x = self.output_f(x) * self.config[&#39;rating_range&#39;] + self.config[&#39;lowest_rating&#39;]
+        return x</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -182,42 +345,68 @@ evaluation mode.
 <span>def <span class="ident">forward</span></span>(<span>self, users, items) ‑> Callable[..., Any]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the :class:<code>Module</code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div></div>
+<div class="desc"><p>Forward pass on the data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>users</code></strong> :&ensp;<code>torch.Tensor</code></dt>
+<dd>Users tensor.</dd>
+<dt><strong><code>items</code></strong> :&ensp;<code>torch.Tensor</code></dt>
+<dd>Items tensor.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>torch.Tesnor</code></dt>
+<dd>The tensor after the forward pass.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def forward(self, users, items):
+    &#34;&#34;&#34;Forward pass on the data.
 
-  users_x = self.embed_user(users)
-  items_x = self.embed_item(items)
+    Parameters
+    ----------
+    users : torch.Tensor
+        Users tensor.
+    items : torch.Tensor
+        Items tensor.
 
-  x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
+    Returns
+    -------
+    torch.Tesnor
+        The tensor after the forward pass.
 
-  n = 2
-  if self.config[&#39;one_hot_encoding&#39;]:
-      n = (self.n_users + self.n_items ) # One hot encoding
-  else:
-      n = 2 # no one hot encoding
-  x = x.view(-1, n * self.k)
+    &#34;&#34;&#34;
+
+    # Embedding users and items separately
+    users_x = self.embed_user(users)
+    items_x = self.embed_item(items)
+
+    # Concatenate them
+    x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
+
+    # The in_features for the first fc layer will be determined according to the preprocessing step
+    n = 2 # Users  + Items
+    if self.config[&#39;one_hot_encoding&#39;]:
+        n = (self.n_users + self.n_items ) # One hot encoding
+    else:
+        n = 2 # no one hot encoding
+
+    # Reshape the input to the fc layers
+    x = x.view(-1, n * self.k)
 
 
-  for i in range(len(self.fc_layers)):
-    x = self.fc_layers[i](x)
-    x = nn.ReLU()(x)
-    x = self.dropout(x)
+    for i in range(len(self.fc_layers)):
+      x = self.fc_layers[i](x)
+      x = nn.ReLU()(x)
+      x = self.dropout(x)
 
-  x = self.output(x)
-  x = self.output_f(x) * self.config[&#39;rating_range&#39;] + self.config[&#39;lowest_rating&#39;]
-  return x</code></pre>
+    x = self.output(x)
+
+    # Scaling the output from [0-1] to [1-5]
+    x = self.output_f(x) * self.config[&#39;rating_range&#39;] + self.config[&#39;lowest_rating&#39;]
+    return x</code></pre>
 </details>
 </dd>
 </dl>
