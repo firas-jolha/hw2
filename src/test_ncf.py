@@ -76,3 +76,4 @@ if __name__=="__main__":
     'rating_range': 4,  # Range of rating (5 - 1 = 4)
     'lowest_rating':1 # The lowest rating (1)
     }
+    test_model(config)
