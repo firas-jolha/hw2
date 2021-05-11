@@ -1,4 +1,4 @@
-# HW2
+# User-Based Collaborative Filtering
 Advanced Machine Learning Course - Homework 2
 
 ![Docker Image Test](https://github.com/firas-jolha/hw2//actions/workflows/docker-image.yml/badge.svg)
