@@ -1,8 +1,6 @@
 import pandas as pd
-from os.path import join as path_join
 import numpy as np
 from scipy import sparse
-from read import read_data
 import configs
 
 def map_id(id, user = True):

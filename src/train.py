@@ -1,10 +1,8 @@
 # Train Script
 from preprocess import preprocess
-import pandas as pd
 from scipy import sparse
-from os.path import join as path_join
 import numpy as np
-from configs import MODELS_PATH
+import configs
 
 
 def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
@@ -205,12 +203,10 @@ def train(config):
 
 
 	# Persisting the best matrices P and Q
-	with open(path_join(MODELS_PATH, "P_ARRAY_CF_new.npy"), "wb") as f:
+	with open(configs.P_ARRAY_PATH, "wb") as f:
 	  np.save(f, best_P)
-	with open(path_join(MODELS_PATH, "Q_ARRAY_CF_new.npy"), "wb") as f:
+	with open(configs.Q_ARRAY_PATH, "wb") as f:
 	  np.save(f, best_Q)
-
-
 
 
 if __name__ == "__main__":

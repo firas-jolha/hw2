@@ -1,23 +1,11 @@
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from read import read_data
-from os.path import join as path_join
 import numpy as np
 from preprocess import map_ids
 from nca import NCA
 import pickle
-from configs import MODELS_PATH
-
-# def do_one_hot(data, n_classes):
-#   batch_size = data.shape[0]
-#   res = torch.zeros(batch_size, n_classes, dtype = torch.int)
-#   data = data.long()
-#   x = np.array(range(res.shape[0]))
-#   y = np.array(data)
-#   res[x, y] = 1
-#   # for i in range():
-#   #   res[i, data[i]] = 1
-#   return res
+import configs
 
 
 def train(config):
@@ -55,9 +43,8 @@ def train(config):
     print("Configurations")
     print(config)
 
-
     # Save the configs dictionary
-    with open(path_join(MODELS_PATH, "configs.pkl"), "wb") as f:
+    with open(configs.CONFIGS_PATH, "wb") as f:
         pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
 
 
@@ -76,7 +63,7 @@ def train(config):
     batch_size = config['batch_size']
     epochs = range(config['epochs'])
 
-    optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     # optimizer = torch.optim.Adam(model.parameters())
 
     # Create a data loader from training data
@@ -90,6 +77,7 @@ def train(config):
     # Iterate over epochs
     for epoch in epochs:
       epoch_loss = []
+
 
       # Iterate over batches
       for batch_users, batch_movies, batch_ratings in data_loader:
@@ -113,30 +101,28 @@ def train(config):
         optimizer.step()
 
         epoch_loss.append(loss.item())
-        print(loss.item())
 
       avg_epoch_loss = np.mean(epoch_loss)
       losses.append(avg_epoch_loss)
       print(f"epoch {epoch}, loss = {avg_epoch_loss}")
 
     # Save the trained model
-    path = path_join(MODELS_PATH, "acf_new.pth")
-    torch.save(model.state_dict(), path)
+    torch.save(model.state_dict(), configs.NCF_MODEL_PATH)
 
 
 
 if __name__=="__main__":
-    k = 7
 
     config = {
-       'k': k, # Latent Space Dimension
+       'k': 7, # Latent Space Dimension
        'layers':[-1, 64, 16, 8],  # sizes of fully connected layers (first fc layer is -1 because it will be set inside training)
        'rating_range': 4,  # Range of rating (5 - 1 = 4)
        'lowest_rating':1, # The lowest rating (1)
        'lr' : 0.001,
-       'batch_size': 100,
+       'batch_size': 1000,
        'epochs': 10,
        'critertion': torch.nn.MSELoss()
     }
 
+    # Do Training
     train(config)

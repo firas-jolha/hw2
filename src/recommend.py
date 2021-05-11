@@ -1,9 +1,7 @@
-from preprocess import unmap_ids, map_ids, map_id, unmap_id
+from preprocess import unmap_ids, map_id
 import pandas as pd
-from scipy import sparse
-from os.path import join as path_join
 import numpy as np
-from configs import MODELS_PATH
+import configs
 
 def do_recommendation(user, P, Q, n=5):
   '''Returns a list of top n recommendations (movies or items) given id of the user
@@ -70,8 +68,8 @@ def recommend(user_id, P, Q, top_n):
 if __name__=='__main__':
 
     # Loading the matrices P and Q
-    P = np.load(path_join(MODELS_PATH, "P_ARRAY_CF.npy"))
-    Q = np.load(path_join(MODELS_PATH, "Q_ARRAY_CF.npy"))
+    P = np.load(configs.P_ARRAY_PATH)
+    Q = np.load(configs.Q_ARRAY_PATH)
 
     # Return recommendations for user number 6321
     user_id = 6321

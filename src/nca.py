@@ -1,12 +1,5 @@
-import pandas as pd
-from scipy import sparse
 from torch import nn
-import torch.nn.functional as f
 import torch
-from torch.utils.data import TensorDataset, DataLoader
-
-from os.path import join as path_join
-import numpy as np
 
 class NCA(nn.Module):
   def __init__(self, config):
@@ -37,6 +30,8 @@ class NCA(nn.Module):
     x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
 
     x = x.view(-1, (self.n_users + self.n_items ) * self.k)
+    x = self.dropout(x)
+
 
     for i in range(len(self.fc_layers)):
       x = self.fc_layers[i](x)

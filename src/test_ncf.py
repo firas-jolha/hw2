@@ -1,16 +1,11 @@
 from nca import NCA
-from os.path import join as path_join
 from read import read_data
-from preprocess import map_ids, map_id
-import pandas as pd
-from scipy import sparse
-from torch import nn
-import torch.nn.functional as f
+from preprocess import map_ids
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 import pickle
-from configs import MODELS_PATH
+import configs
 
 def test_model():
     """Runs the saved neural network model on test data and returns the test loss.
@@ -30,38 +25,26 @@ def test_model():
     movies = torch.Tensor(movie_ids).int()
     ratings = torch.Tensor(ratings)
 
-    all_users = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
-    all_movies = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
-
     config = {}
-    with open(path_join(MODELS_PATH, "configs.pkl"), "rb") as f:
+    with open(configs.CONFIGS_PATH, "rb") as f:
         config = pickle.load(f)
 
-    # users = torch.nn.functional.one_hot(users.long(), len(all_users))
-    # movies = torch.nn.functional.one_hot(movies.long(), len(all_movies))
-
-
-
-    config['n_users'] = len(all_users)
-    config['n_items'] = len(all_movies)
-    config['layers'][0] = (config['n_users'] + config['n_items'])*config['k']
-
-
     model = NCA(config)
-    model.load_state_dict(torch.load(path_join(MODELS_PATH, "acf.pth"), 'cpu'))
+    model.load_state_dict(torch.load(configs.NCF_MODEL_PATH, 'cpu'))
     model.eval()
 
     batch_size = 200
 
-    critertion = torch.nn.MSELoss()
+    critertion = config['critertion']
 
     data_loader = DataLoader(TensorDataset(users, movies, ratings), batch_size = batch_size)
 
     losses = []
+
     for batch_users, batch_movies, batch_ratings in data_loader:
 
-        batch_users = torch.nn.functional.one_hot(batch_users.long(), len(all_users))
-        batch_movies = torch.nn.functional.one_hot(batch_movies.long(), len(all_movies))
+        batch_users = torch.nn.functional.one_hot(batch_users.long(), config['n_users'])
+        batch_movies = torch.nn.functional.one_hot(batch_movies.long(), config['n_items'])
 
         users = batch_users.int()
         movies = batch_movies.int()

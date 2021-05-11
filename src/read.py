@@ -1,6 +1,5 @@
 import pandas as pd
-from os.path import join as path_join
-from configs import DATA_PATH
+import configs
 
 def read_data(training = True):
     """Reads the data from data folder.
@@ -23,10 +22,10 @@ def read_data(training = True):
 
     if training:
         # Read Training data
-        df = pd.read_csv(path_join(DATA_PATH, "train.csv"))
+        df = pd.read_csv(configs.TRAIN_DATA_PATH)
     else:
         # Read Test data
-        df = pd.read_csv(path_join(DATA_PATH, "test.csv"))
+        df = pd.read_csv(configs.TEST_DATA_PATH)
 
     user_ids = df['userId']
     item_ids = df['movieId']

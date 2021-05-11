@@ -1,9 +1,8 @@
-# Test Script
 from train import calculate_loss
 import numpy as np
-from os.path import join as path_join
 from scipy import sparse
-from configs import MODELS_PATH
+import configs
+
 
 def test_loss():
     """Computes the loss for test data and returns it.
@@ -15,11 +14,11 @@ def test_loss():
     """
 
     # Reading the best values for matrices P and Q from models folder
-    P = np.load(path_join(MODELS_PATH, "P_ARRAY_CF.npy"))
-    Q = np.load(path_join(MODELS_PATH, "Q_ARRAY_CF.npy"))
+    P = np.load(configs.P_ARRAY_PATH)
+    Q = np.load(configs.Q_ARRAY_PATH)
 
     # Reading the rating matrix for test data
-    R2 = sparse.load_npz(path_join(MODELS_PATH, "R2.npz"))
+    R2 = sparse.load_npz(configs.R_TEST_MATRIX_PATH)
 
     # Calculating the loss for test data with no Regularization
     loss = calculate_loss(P, Q, R2, lam=0)
