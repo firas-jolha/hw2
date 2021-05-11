@@ -1,5 +1,6 @@
 import pandas as pd
 from os.path import join as path_join
+from configs import DATA_PATH
 
 def read_data(training = True):
     """Reads the data from data folder.
@@ -19,9 +20,6 @@ def read_data(training = True):
         series of ratings.
 
     """
-
-    # Set Data Path
-    DATA_PATH = "data"
 
     if training:
         # Read Training data

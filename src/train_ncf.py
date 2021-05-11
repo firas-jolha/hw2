@@ -5,6 +5,8 @@ from os.path import join as path_join
 import numpy as np
 from preprocess import map_ids
 from nca import NCA
+import pickle
+from configs import MODELS_PATH
 
 # def do_one_hot(data, n_classes):
 #   batch_size = data.shape[0]
@@ -52,6 +54,12 @@ def train(config):
 
     print("Configurations")
     print(config)
+
+
+    # Save the configs dictionary
+    with open(path_join(MODELS_PATH, "configs.pkl"), "wb") as f:
+        pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
+
 
     # Try to use GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -111,13 +119,11 @@ def train(config):
       losses.append(avg_epoch_loss)
       print(f"epoch {epoch}, loss = {avg_epoch_loss}")
 
-
-
-    MODELS_PATH = "models"
-
     # Save the trained model
     path = path_join(MODELS_PATH, "acf_new.pth")
     torch.save(model.state_dict(), path)
+
+
 
 if __name__=="__main__":
     k = 7

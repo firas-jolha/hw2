@@ -3,6 +3,7 @@ from train import calculate_loss
 import numpy as np
 from os.path import join as path_join
 from scipy import sparse
+from configs import MODELS_PATH
 
 def test_loss():
     """Computes the loss for test data and returns it.
@@ -12,9 +13,6 @@ def test_loss():
     float
 		The loss of test data in data folder.
     """
-
-    # Models path where saved data containers and models live
-    MODELS_PATH = 'models'
 
     # Reading the best values for matrices P and Q from models folder
     P = np.load(path_join(MODELS_PATH, "P_ARRAY_CF.npy"))

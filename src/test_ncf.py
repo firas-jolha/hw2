@@ -9,8 +9,17 @@ import torch.nn.functional as f
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
+import pickle
+from configs import MODELS_PATH
 
-def test_model(config):
+def test_model():
+    """Runs the saved neural network model on test data and returns the test loss.
+
+    Returns
+    -------
+    None
+
+    """
 
     user_ids, movie_ids, ratings = read_data(training = False)
 
@@ -21,10 +30,12 @@ def test_model(config):
     movies = torch.Tensor(movie_ids).int()
     ratings = torch.Tensor(ratings)
 
-    MODELS_PATH = "models"
-
     all_users = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
     all_movies = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+
+    config = {}
+    with open(path_join(MODELS_PATH, "configs.pkl"), "rb") as f:
+        config = pickle.load(f)
 
     # users = torch.nn.functional.one_hot(users.long(), len(all_users))
     # movies = torch.nn.functional.one_hot(movies.long(), len(all_movies))
@@ -35,9 +46,6 @@ def test_model(config):
     config['n_items'] = len(all_movies)
     config['layers'][0] = (config['n_users'] + config['n_items'])*config['k']
 
-    # print(config)
-
-    MODELS_PATH = "models"
 
     model = NCA(config)
     model.load_state_dict(torch.load(path_join(MODELS_PATH, "acf.pth"), 'cpu'))
@@ -69,11 +77,6 @@ def test_model(config):
 
 
 if __name__=="__main__":
-    k = 7
-    config = {
-    'k': k, # Latent Space Dimension
-    'layers':[-1, 64, 16, 8],  # sizes of fully connected layers
-    'rating_range': 4,  # Range of rating (5 - 1 = 4)
-    'lowest_rating':1 # The lowest rating (1)
-    }
-    test_model(config)
+
+    # Test the NCF
+    test_model()

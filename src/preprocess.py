@@ -3,6 +3,7 @@ from os.path import join as path_join
 import numpy as np
 from scipy import sparse
 from read import read_data
+import configs
 
 def map_id(id, user = True):
     """Maps the id of user or movie to basic indexing [0-n].
@@ -22,12 +23,12 @@ def map_id(id, user = True):
     """
 
     # Reading the mapping array from models folder
-    MODELS_PATH = "models"
+
     uq = None
     if user:
-        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+        uq = np.load(configs.USER_IDS_PATH)
     else:
-        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+        uq = np.load(configs.MOVIE_IDS_PATH)
 
 
     # Returning the new id
@@ -55,12 +56,12 @@ def unmap_id(id, user=True):
     """
 
     # Reading the mapping array from models folder
-    MODELS_PATH = "models"
+
     uq = None
     if user:
-        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+        uq = np.load(configs.USER_IDS_PATH)
     else:
-        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+        uq = np.load(configs.MOVIE_IDS_PATH)
 
 
     # Returning the new id
@@ -89,12 +90,12 @@ def map_ids(series, users = True):
 
     # Taking the unique values of the input
     # uq = series.unique()
-    MODELS_PATH = "models"
+
     uq = None
     if users:
-        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+        uq = np.load(configs.USER_IDS_PATH)
     else:
-        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+        uq = np.load(configs.MOVIE_IDS_PATH)
 
     # remapping the values
     return series.map(pd.Series(range(0, uq.size), index = uq))
@@ -117,12 +118,12 @@ def unmap_ids(series, users = True):
     """
     # Taking the unique values
 
-    MODELS_PATH = "models"
+
     uq = None
     if users:
-        uq = np.load(path_join(MODELS_PATH, "all_users_indices.npy"))
+        uq = np.load(configs.USER_IDS_PATH)
     else:
-        uq = np.load(path_join(MODELS_PATH, "all_movies_indices.npy"))
+        uq = np.load(configs.MOVIE_IDS_PATH)
     # uq = original_series.unique()
 
     # Remapping
@@ -157,12 +158,9 @@ def preprocess():
 
     """
 
-    # Set Data Path
-    DATA_PATH = "data"
-
     # Read Training and Test Data
-    train_df = pd.read_csv(path_join(DATA_PATH, "train.csv"))
-    test_df = pd.read_csv(path_join(DATA_PATH, "test.csv"))
+    train_df = pd.read_csv(configs.TRAIN_DATA_PATH)
+    test_df = pd.read_csv(configs.TEST_DATA_PATH)
 
     # Data Exploration and Preprocessing
     user_ids = train_df['userId']
@@ -175,11 +173,10 @@ def preprocess():
 
 
     # Save the mapping arrays for users and movies
-    MODELS_PATH = "models"
-    with open(path_join(MODELS_PATH, "all_users_indices.npy"), "wb") as f:
+    with open(configs.USER_IDS_PATH, "wb") as f:
         np.save(f, all_users)
 
-    with open(path_join(MODELS_PATH, "all_movies_indices.npy"), "wb") as f:
+    with open(configs.MOVIE_IDS_PATH, "wb") as f:
         np.save(f, all_movies)
 
 
@@ -216,10 +213,10 @@ def preprocess():
         dtype=np.float
      )
 
-    MODELS_PATH = 'models'
+
 
     # Save the rating matrix for training data
-    sparse.save_npz(path_join(MODELS_PATH,'R.npz'), R)
+    sparse.save_npz(configs.R_TRAIN_MATRIX_PATH, R)
 
     # Sparse rating matrix from test data
     R2 = sparse.coo_matrix(
@@ -229,7 +226,7 @@ def preprocess():
     )
 
     # Save the rating matrix for test data
-    sparse.save_npz(path_join(MODELS_PATH,'R2.npz'), R2)
+    sparse.save_npz(configs.R_TEST_MATRIX_PATH, R2)
 
     # return user_ids, movie_ids, ratings, n_users, n_movies, R, R2
     return R, R2

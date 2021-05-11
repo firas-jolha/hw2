@@ -4,6 +4,7 @@ import pandas as pd
 from scipy import sparse
 from os.path import join as path_join
 import numpy as np
+from configs import MODELS_PATH
 
 
 def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
@@ -33,8 +34,6 @@ def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
     M = np.zeros(R.shape)
 
     x1, x2 = R.nonzero()
-
-    # M[x1, x2] = 1
 
     P_tau = P[x1, :]
     Q_tau = Q[x2, :]
@@ -204,7 +203,6 @@ def train(config):
 
 	print(f"Lowest loss reached for test data is {last_loss}")
 
-	MODELS_PATH = "models"
 
 	# Persisting the best matrices P and Q
 	with open(path_join(MODELS_PATH, "P_ARRAY_CF_new.npy"), "wb") as f:
