@@ -38,12 +38,17 @@ def train(config):
 
     config['n_users'] = np.unique(user_ids).size
     config['n_items'] = np.unique(movie_ids).size
-    config['layers'][0] = (config['n_users']+config['n_items']) * config['k']
+
+    # The input size of first fc layer is different if we do one hot encoding for the input
+    if config['one_hot_encoding']:
+        config['layers'][0] = (config['n_users'] + config['n_items']) * config['k']
+    else: # 2 by k - because we conactenate the users and items, k is the output size of embedding layers
+        config['layers'][0] = 2 * config['k']
 
     print("Configurations")
     print(config)
 
-    # Save the configs dictionary
+    # Save the configs as a dictionary
     with open(configs.CONFIGS_PATH, "wb") as f:
         pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
 
@@ -55,6 +60,7 @@ def train(config):
     model = NCA(config).to(device)
 
     print("-"*50)
+
     print("Our Model")
     print(model)
 
@@ -83,8 +89,9 @@ def train(config):
       for batch_users, batch_movies, batch_ratings in data_loader:
 
         # Do one-hot encoding
-        batch_users = torch.nn.functional.one_hot(batch_users.long(), config['n_users'])
-        batch_movies = torch.nn.functional.one_hot(batch_movies.long(), config['n_items'])
+        if config['one_hot_encoding']:
+            batch_users = torch.nn.functional.one_hot(batch_users.long(), config['n_users'])
+            batch_movies = torch.nn.functional.one_hot(batch_movies.long(), config['n_items'])
 
 
         users = batch_users.int().to(device)
@@ -107,21 +114,27 @@ def train(config):
       print(f"epoch {epoch}, loss = {avg_epoch_loss}")
 
     # Save the trained model
-    torch.save(model.state_dict(), configs.NCF_MODEL_PATH)
+    # Save different models to different files which is based whether it includes one-hot encoding of features or not
+    if config['one_hot_encoding']:
+        torch.save(model.state_dict(), configs.NCF_MODEL_ONE_HOT_PATH)
+    else:
+        torch.save(model.state_dict(), configs.NCF_MODEL_PATH)
 
 
 
 if __name__=="__main__":
 
+    # Training Settings
     config = {
        'k': 7, # Latent Space Dimension
-       'layers':[-1, 64, 16, 8],  # sizes of fully connected layers (first fc layer is -1 because it will be set inside training)
+       'layers':[-1, 64, 16, 8, 4],  # sizes of fully connected layers (first fc layer is -1 because it will be set inside training)
        'rating_range': 4,  # Range of rating (5 - 1 = 4)
        'lowest_rating':1, # The lowest rating (1)
-       'lr' : 0.001,
-       'batch_size': 1000,
-       'epochs': 10,
-       'critertion': torch.nn.MSELoss()
+       'lr' : 0.001, # Learning Rate
+       'batch_size': 1000, # Batch Size
+       'epochs': 10, # Number of epochs
+       'critertion': torch.nn.MSELoss(), # Loss function
+       'one_hot_encoding': False # One hot encoding of features
     }
 
     # Do Training

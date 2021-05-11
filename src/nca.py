@@ -29,8 +29,12 @@ class NCA(nn.Module):
 
     x = torch.cat([users_x, items_x], dim = 1) # Concatenate along the second axis
 
-    x = x.view(-1, (self.n_users + self.n_items ) * self.k)
-    x = self.dropout(x)
+    n = 2
+    if self.config['one_hot_encoding']:
+        n = (self.n_users + self.n_items ) # One hot encoding
+    else:
+        n = 2 # no one hot encoding
+    x = x.view(-1, n * self.k)
 
 
     for i in range(len(self.fc_layers)):
