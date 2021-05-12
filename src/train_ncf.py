@@ -78,6 +78,8 @@ def train(config):
     # Accumulatas the loss across epochs
     losses = []
 
+    print(sum(p.numel() for p in model.parameters() if p.requires_grad))
+
     print("-"*50)
 
     # Iterate over epochs

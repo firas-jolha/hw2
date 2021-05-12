@@ -27,24 +27,29 @@ def update_P(P, Q, R, alpha = 0.001, lam = 0.001):
         	P itself after adjusting the values
 
     """
+    # Check that P and Q have a proper dimensions for matrix multiplication
     assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
 
-    M = np.zeros(R.shape)
-
+    # Getting only user and movies ids of existing ratings
     x1, x2 = R.nonzero()
 
+    # Projecting on P and Q matrices
     P_tau = P[x1, :]
     Q_tau = Q[x2, :]
 
     # Inner Product
     prod = np.sum((P_tau * Q_tau), axis = 1)
 
+    # Building R_hat from inner product and existing indices
     R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
 
+    # Taking the deviation
     res = R_hat - R
 
+    # Calculating the gradient and adding the regularization part
     gradient = alpha * ((res @ Q) - lam * P)
 
+    # Updating P
     P += - gradient
 
     return P
@@ -71,30 +76,30 @@ def update_Q(P, Q, R, alpha = 0.001, lam = 0.001):
     np.ndarray
 		Q itself after adjusting the values
     """
-
+    # Check that P and Q have a proper dimensions for matrix multiplication
     assert P.shape[1] == Q.shape[1], "P and Q should have proper dimensions for matrix multiplication"
 
-    M = np.zeros(R.shape)
+    # Getting only user and movies ids of existing ratings
     x1, x2 = R.nonzero()
 
-    # # Mask
-    # M[x1, x2] = 1
-
-
+    # Projecting on P and Q matrices
     P_tau = P[x1, :]
     Q_tau = Q[x2, :]
 
     # Inner Product
     prod = np.sum((P_tau * Q_tau), axis = 1)
 
+    # Building R_hat from inner product and existing indices
     R_hat = sparse.coo_matrix((prod, (x1, x2)), shape = R.shape)
 
+    # Taking the deviation
     res = R_hat - R
 
+    # Calculating the gradient and adding the regularization part
     gradient = alpha * ((res.T @ P) - lam * Q )
 
+    # Updating Q
     Q += - gradient
-
 
     return Q
 
@@ -119,24 +124,37 @@ def calculate_loss(P, Q, R, lam):
 
     """
 
+    # First step to compute R_hat
     R_prod = (P @ Q.T)
 
+    # Only rated movie ids x2 by user ids x1
     x1, x2 = R.nonzero()
+
+    # Projecting to get R_hat
     R_hat = R_prod[x1, x2]
+
+    # Real ratings
     R_tau = R.data
 
+    # ADDED biases
+    # References
+    # https://datajobs.com/data-science-repo/Recommender-Systems-%5BNetflix%5D.pdf
     mu = np.mean(R_hat) # Overall average rating
     b_u = np.mean(R_prod, axis = 1)
     b_i = np.mean(R_prod, axis = 0)
     b_u = b_u[x1] - mu
     b_i = b_i[x2] - mu
 
+    # Calculating the deviation from the real ratings
     res = (R_hat + mu + b_u + b_i) - R_tau
 
+    # R^2
     res = np.square(res)
 
+    # Averaging over all ratings of training data
     res = np.mean(res)
 
+    # ADDing the Regularization Term
     res += lam *(np.linalg.norm(P) + np.linalg.norm(Q)) # Regularization Term
 
     return res
