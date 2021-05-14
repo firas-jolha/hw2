@@ -33,15 +33,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
     - name: Train MF Model
-      working-directory: ./src
-      run: python train.py 
+      run: python ./src/train.py 
     - name: Test MF Model
-      working-directory: ./src
-      run: python test.py 
+      run: python ./src/test.py
+      
     - name: Train neural Model
-      working-directory: ./src
-      run: python train_ncf.py 
+      run: python ./src/train_ncf.py 
     - name: test neural Model
-      working-directory: ./src
-      run: python test_ncf.py 
+      run: python ./src/test_ncf.py 
